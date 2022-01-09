@@ -1,0 +1,15 @@
+{
+  "domain": "sgp40",
+  "name": "Sensirion SGP40",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sgp40",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@GitterRemote"
+  ],
+  "iot_class": "local_polling"
+}
