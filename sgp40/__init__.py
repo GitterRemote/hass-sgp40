@@ -1,5 +1,6 @@
 """The Sensirion SGP40 integration."""
 from __future__ import annotations
+import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,15 +30,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data = domain_data[entry.entry_id]
 
-    def run_service():
-        _LOGGER.debug("start run_service")
-        service.run(
-            None,
-            data.get(const.VALUE_UPDATE_CALLBACK),
-            data.get(const.ERROR_CALLBACK),
-        )
+    async def run_service():
+        def value_update_callback(*args, **kwargs):
+            callback = data.get(const.VALUE_UPDATE_CALLBACK)
+            if callback is not None:
+                callback(*args, **kwargs)
 
-    hass.add_job(run_service)
+        def error_callback(*args, **kwargs):
+            callback = data.get(const.ERROR_CALLBACK)
+            if callback is not None:
+                callback(*args, **kwargs)
+
+        def run():
+            _LOGGER.debug("start run_service")
+            service.run(None, value_update_callback, error_callback)
+
+        return asyncio.to_thread(run)
+
+    task = asyncio.create_task(run_service())
+    data["task"] = task
     _LOGGER.debug(f"async_setup_entry {serial_id}")
 
     return True
@@ -49,7 +60,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS)
     if unload_ok:
-        hass.data[const.DOMAIN].pop(entry.entry_id)
+        data = hass.data[const.DOMAIN].pop(entry.entry_id)
+        data["task"].cancel()
         service.stop()
 
     _LOGGER.debug(f"async_unload_entry: {unload_ok}")
