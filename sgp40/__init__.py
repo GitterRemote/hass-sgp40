@@ -18,16 +18,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("async_setup_entry")
     # TODO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    domain_data = hass.data.setdefault(const.DOMAIN, {})
 
     serial_id = service.init()
 
-    hass.data[const.DOMAIN][entry.entry_id] = {
+    domain_data[entry.entry_id] = {
         const.SERIAL_ID: serial_id,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    data = hass.data[const.DOMAIN][entry.entry_id]
+    data = domain_data[entry.entry_id]
     value_update_callback = data[const.VALUE_UPDATE_CALLBACK]
     error_callback = data[const.ERROR_CALLBACK]
     res = value_update_callback and error_callback
