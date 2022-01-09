@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # TODO: move init into config flow and store serial_id in entry, and set
     # the unique id of the flow
-    serial_id = service.init()
+    serial_id = service.init()  # TODO: retry needed
 
     domain_data[entry.entry_id] = {
         const.SERIAL_ID: serial_id,
@@ -44,7 +44,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         def run():
             _LOGGER.debug("start run_service")
-            service.run(None, value_update_callback, error_callback)
+            try:
+                service.run(None, value_update_callback, error_callback)
+            except Exception as e:
+                _LOGGER.error(f"service failed with {e}")
 
         return await asyncio.to_thread(run)
 
