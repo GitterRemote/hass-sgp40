@@ -10,7 +10,7 @@ from . import const
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[str] = ["sersor"]
+PLATFORMS: list[str] = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
