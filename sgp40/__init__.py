@@ -19,7 +19,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("async_setup_entry")
     domain_data = hass.data.setdefault(const.DOMAIN, {})
 
-    # TODO: move init into config flow and store serial_id in daa
+    # TODO: move init into config flow and store serial_id in entry, and set
+    # the unique id of the flow
     serial_id = service.init()
 
     domain_data[entry.entry_id] = {
