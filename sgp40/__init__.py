@@ -16,10 +16,9 @@ PLATFORMS: list[str] = ["sensor"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sensirion SGP40 from a config entry."""
     _LOGGER.debug("async_setup_entry")
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
     domain_data = hass.data.setdefault(const.DOMAIN, {})
 
+    # TODO: move init into config flow and store serial_id in daa
     serial_id = service.init()
 
     domain_data[entry.entry_id] = {
