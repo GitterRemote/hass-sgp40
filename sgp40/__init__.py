@@ -46,10 +46,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug("start run_service")
             service.run(None, value_update_callback, error_callback)
 
-        return asyncio.to_thread(run)
+        return await asyncio.to_thread(run)
 
     task = asyncio.create_task(run_service())
     data["task"] = task
+    # TODO:
+    # entry.async_on_unload(
+#         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, service.stop)
+#     )
     _LOGGER.debug(f"async_setup_entry {serial_id}")
 
     return True
