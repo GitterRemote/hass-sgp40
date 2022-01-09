@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 service.run(None, value_update_callback, error_callback)
             except Exception as e:
-                _LOGGER.error(f"service failed with {e}")
+                _LOGGER.exception(f"service failed with {e}")
 
         return await asyncio.to_thread(run)
 
