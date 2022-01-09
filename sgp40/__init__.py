@@ -29,12 +29,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     data = domain_data[entry.entry_id]
-    value_update_callback = data[const.VALUE_UPDATE_CALLBACK]
-    error_callback = data[const.ERROR_CALLBACK]
-    res = value_update_callback and error_callback
-    _LOGGER.debug(f"async_setup_entry {serial_id} {res}")
-    if res:
-        hass.add_job(service.run, None, value_update_callback, error_callback)
+
+    def run_service():
+        _LOGGER.debug("start run_service")
+        service.run(
+            None,
+            data.get(const.VALUE_UPDATE_CALLBACK),
+            data.get(const.ERROR_CALLBACK),
+        )
+
+    hass.add_job(run_service)
+    _LOGGER.debug(f"async_setup_entry {serial_id}")
 
     return True
 

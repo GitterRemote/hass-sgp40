@@ -38,7 +38,7 @@ async def async_setup_entry(
         entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback):
     """Set up with config entry forwarded from __init__"""
-    _LOGGER.debug("async_setup_entry")
+    _LOGGER.debug("sensor async_setup_entry")
     data = hass.data[const.DOMAIN][entry.entry_id]
     sensor = SGPSensor(data[const.SERIAL_ID])
     data[const.VALUE_UPDATE_CALLBACK] = sensor.on_value_updated
