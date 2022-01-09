@@ -66,10 +66,7 @@ class SGPSensor(SensorEntity):
 
     def on_value_updated(self, new_value, old_value, temp, rh):
         self._value = new_value
-        start = time.time()
         self.schedule_update_ha_state()
-        end = time.time()
-        _LOGGER.debug(f"schedule_update_ha_state time {end - start}")
 
     def on_error(self, err):
         _LOGGER.error(f"update error: {err}")
