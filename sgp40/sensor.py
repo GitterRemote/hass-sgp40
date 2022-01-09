@@ -40,7 +40,7 @@ async def async_setup_entry(
     """Set up with config entry forwarded from __init__"""
     _LOGGER.debug("sensor async_setup_entry")
     data = hass.data[const.DOMAIN][entry.entry_id]
-    sensor = SGPSensor(data[const.SERIAL_ID])
+    sensor = SGPSensor(data[const.SERIAL_ID], data.get(const.NAME))
     data[const.VALUE_UPDATE_CALLBACK] = sensor.on_value_updated
     data[const.ERROR_CALLBACK] = sensor.on_error
     async_add_entities([sensor])
@@ -48,12 +48,13 @@ async def async_setup_entry(
 
 class SGPSensor(SensorEntity):
 
-    _attr_name = "VOC Index"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, serial_id: str):
+    def __init__(self, serial_id: str, name: str | None):
         self._serial_id = serial_id
         self._value = None
+        name = name or "SGP40"
+        self._attr_name = f"{name} VOC Index"
 
     @property
     def native_value(self):
