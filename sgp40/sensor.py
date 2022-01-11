@@ -52,8 +52,8 @@ class SGPSensor(SensorEntity):
     def __init__(
             self,
             serial_id: str,
-            name: str | None,
-            tolerance_range: int | None):
+            name: str | None = None,
+            tolerance_range: int | None = None):
         self._serial_id = serial_id
         self._value = None
         name = name or "SGP40"
