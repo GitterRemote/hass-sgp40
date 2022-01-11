@@ -21,7 +21,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # TODO: move init into config flow and store serial_id in entry, and set
     # the unique id of the flow
-    serial_id = service.init()  # TODO: retry needed
+    # TODO: fix reload cause init -21 error
+    serial_id = service.init()
 
     domain_data[entry.entry_id] = {
         const.SERIAL_ID: serial_id,

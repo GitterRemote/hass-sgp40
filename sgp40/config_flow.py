@@ -51,6 +51,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     return {"name": data["name"]}
 
 
+# TODO: add tolerance_range to config option
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sensirion SGP40."""
 
