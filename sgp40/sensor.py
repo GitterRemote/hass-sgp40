@@ -69,7 +69,7 @@ class SGPSensor(SensorEntity):
         return f"sgp40_{self._serial_id}_voc"
 
     def on_value_updated(self, new_value, old_value, temp, rh):
-        if abs(new_value - self._value) > self.tolerance_range:
+        if abs(new_value - (self._value or 0)) > self.tolerance_range:
             self._value = new_value
             self.schedule_update_ha_state()
 
