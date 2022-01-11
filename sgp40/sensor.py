@@ -1,5 +1,4 @@
 import logging
-import time
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
@@ -50,11 +49,16 @@ class SGPSensor(SensorEntity):
 
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, serial_id: str, name: str | None):
+    def __init__(
+            self,
+            serial_id: str,
+            name: str | None,
+            tolerance_range: int | None):
         self._serial_id = serial_id
         self._value = None
         name = name or "SGP40"
         self._attr_name = f"{name} VOC Index"
+        self.tolerance_range = tolerance_range or 3
 
     @property
     def native_value(self):
@@ -65,8 +69,9 @@ class SGPSensor(SensorEntity):
         return f"sgp40_{self._serial_id}_voc"
 
     def on_value_updated(self, new_value, old_value, temp, rh):
-        self._value = new_value
-        self.schedule_update_ha_state()
+        if abs(new_value - self._value) > self.tolerance_range:
+            self._value = new_value
+            self.schedule_update_ha_state()
 
     def on_error(self, err):
         _LOGGER.error(f"update error: {err}")
