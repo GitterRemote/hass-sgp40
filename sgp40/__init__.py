@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise Exception("temperature state is None")
             if rh is None:
                 raise Exception("humidity state is None")
-            return float(rh.state) * 1000, float(temp.state) * 1000
+            return int(float(rh.state) * 1000), int(float(temp.state) * 1000)
 
         def value_update_callback(*args, **kwargs):
             callback = data.get(const.VALUE_UPDATE_CALLBACK)
