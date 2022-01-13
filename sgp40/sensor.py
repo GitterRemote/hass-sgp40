@@ -72,7 +72,7 @@ class SGPSensor(SensorEntity):
         if abs(new_value - (self._value or 0)) > self.tolerance_range:
             self._value = new_value
             self.schedule_update_ha_state()
-            _LOGGER.debug(f"value update: temp {temp}, rh {rh}%")
+            _LOGGER.debug(f"value update: temp {temp/1000}, rh {rh/1000}%")
 
     def on_error(self, err):
         _LOGGER.error(f"update error: {err}")
