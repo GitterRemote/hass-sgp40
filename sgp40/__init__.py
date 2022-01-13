@@ -83,6 +83,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         data = hass.data[const.DOMAIN].pop(entry.entry_id)
         data["task"].cancel()
+        cancelled = data["task"].cancelled()
+        _LOGGER.debug(f"async_unload_entry: task cancelled: {cancelled}")
         service.stop()
 
     _LOGGER.debug(f"async_unload_entry: {unload_ok}")
