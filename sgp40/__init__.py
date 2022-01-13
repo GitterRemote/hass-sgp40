@@ -4,7 +4,7 @@ import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from sgp40 import service
 
 from . import const
@@ -32,7 +32,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data = domain_data[entry.entry_id]
 
+    temperature_entity_id = "sensor.zhimi_airpurifier_va1_temperature"
+    humidity_entity_id = "sensor.zhimi_airpurifier_va1_humidity"
+
     async def run_service():
+        def rh_t_getter():
+            temp: State | None = hass.states.get(temperature_entity_id)
+            rh: State | None = hass.states.get(humidity_entity_id)
+            if temp is None:
+                raise Exception("temperature state is None")
+            if rh is None:
+                raise Exception("humidity state is None")
+            return float(rh.state) * 1000, float(temp.state) * 1000
+
         def value_update_callback(*args, **kwargs):
             callback = data.get(const.VALUE_UPDATE_CALLBACK)
             if callback is not None:
@@ -46,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         def run():
             _LOGGER.debug("start run_service")
             try:
-                service.run(None, value_update_callback, error_callback)
+                service.run(rh_t_getter, value_update_callback, error_callback)
             except Exception as e:
                 _LOGGER.exception(f"service failed with {e}")
 
