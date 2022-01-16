@@ -50,20 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise Exception("humidity state is None")
             return int(float(rh.state) * 1000), int(float(temp.state) * 1000)
 
-        def value_update_callback(*args, **kwargs):
-            callback = data.get(const.VALUE_UPDATE_CALLBACK)
-            if callback is not None:
-                callback(*args, **kwargs)
-
-        def error_callback(*args, **kwargs):
-            callback = data.get(const.ERROR_CALLBACK)
-            if callback is not None:
-                callback(*args, **kwargs)
-
         _LOGGER.debug("start run_service")
         try:
-            await service.run(
-                rh_t_getter, value_update_callback, error_callback)
+            await service.run(rh_t_getter)
         except Exception as e:
             _LOGGER.exception(f"service failed with {e}")
 
@@ -84,7 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS)
     if unload_ok:
-        # keep the servie for next time reuse, because service init has bug
+        # keep the service for next time reuse, because service init has bug
         # for reconnecting to the sensor
         data = hass.data[const.DOMAIN][entry.entry_id]
         await data["service"].stop()

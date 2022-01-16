@@ -40,8 +40,9 @@ async def async_setup_entry(
     _LOGGER.debug("sensor async_setup_entry")
     data = hass.data[const.DOMAIN][entry.entry_id]
     sensor = SGPSensor(data[const.SERIAL_ID], data.get(const.NAME))
-    data[const.VALUE_UPDATE_CALLBACK] = sensor.on_value_updated
-    data[const.ERROR_CALLBACK] = sensor.on_error
+    service = data[const.SERVICE]
+    service.set_value_updated_callback(sensor.on_value_updated)
+    service.set_error_callback(sensor.on_error)
     async_add_entities([sensor])
 
 
