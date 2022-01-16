@@ -5,7 +5,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State
-from sgp40 import service
+from sgp40 import service as service_mod
 
 from . import const
 
@@ -19,19 +19,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("async_setup_entry")
     domain_data = hass.data.setdefault(const.DOMAIN, {})
 
-    # TODO: move init into config flow and store serial_id in entry, and set
-    # the unique id of the flow
-    # TODO: fix reload cause init -21 error
-    serial_id = service.init()
-
-    domain_data[entry.entry_id] = {
-        const.SERIAL_ID: serial_id,
-    }
+    data = domain_data.get(entry.entry_id)
+    if not data:
+        # TODO: move init into config flow and store serial_id in entry, and
+        # set the unique id of the flow
+        # TODO: fix reload cause init -21 error
+        service = service_mod.Service()
+        serial_id = await service.init()
+        data = domain_data[entry.entry_id] = {
+            const.SERIAL_ID: serial_id,
+            "service": service,
+        }
+    else:
+        service = data["service"]
+        serial_id = data[const.SERIAL_ID]
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    data = domain_data[entry.entry_id]
-
+    # TODO: move config to config options
     temperature_entity_id = "sensor.zhimi_airpurifier_va1_temperature"
     humidity_entity_id = "sensor.zhimi_airpurifier_va1_humidity"
 
@@ -55,14 +60,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if callback is not None:
                 callback(*args, **kwargs)
 
-        def run():
-            _LOGGER.debug("start run_service")
-            try:
-                service.run(rh_t_getter, value_update_callback, error_callback)
-            except Exception as e:
-                _LOGGER.exception(f"service failed with {e}")
-
-        return await asyncio.to_thread(run)
+        _LOGGER.debug("start run_service")
+        try:
+            await service.run(
+                rh_t_getter, value_update_callback, error_callback)
+        except Exception as e:
+            _LOGGER.exception(f"service failed with {e}")
 
     task = asyncio.create_task(run_service())
     data["task"] = task
@@ -81,11 +84,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS)
     if unload_ok:
-        data = hass.data[const.DOMAIN].pop(entry.entry_id)
-        data["task"].cancel()
-        cancelled = data["task"].cancelled()
-        _LOGGER.debug(f"async_unload_entry: task cancelled: {cancelled}")
-        service.stop()
+        # keep the servie for next time reuse, because service init has bug
+        # for reconnecting to the sensor
+        data = hass.data[const.DOMAIN][entry.entry_id]
+        await data["service"].stop()
+        done = data.pop("task").done()
+        _LOGGER.debug(f"async_unload_entry: task done: {done}")
 
     _LOGGER.debug(f"async_unload_entry: {unload_ok}")
     return unload_ok
