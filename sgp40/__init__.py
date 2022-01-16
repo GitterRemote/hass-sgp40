@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State
 from sgp40 import service as service_mod
@@ -23,15 +24,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not data:
         # TODO: move init into config flow and store serial_id in entry, and
         # set the unique id of the flow
-        # TODO: fix reload cause init -21 error
         service = service_mod.Service()
         serial_id = await service.init()
         data = domain_data[entry.entry_id] = {
             const.SERIAL_ID: serial_id,
-            "service": service,
+            const.SERVICE: service,
         }
     else:
-        service = data["service"]
+        service = data[const.SERVICE]
         serial_id = data[const.SERIAL_ID]
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -56,12 +56,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as e:
             _LOGGER.exception(f"service failed with {e}")
 
-    task = asyncio.create_task(run_service())
-    data["task"] = task
-    # TODO:
-    # entry.async_on_unload(
-#         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, service.stop)
-#     )
+    data["task"] = asyncio.create_task(run_service())
+
+    async def on_hass_stop(*args):
+        # TODO: add option to indicate whether to stop heater when hass stopped
+        _LOGGER.debug("stopping sgp40 service")
+        await service.stop()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
+
     _LOGGER.debug(f"async_setup_entry {serial_id}")
 
     return True
@@ -76,7 +81,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # keep the service for next time reuse, because service init has bug
         # for reconnecting to the sensor
         data = hass.data[const.DOMAIN][entry.entry_id]
-        await data["service"].stop()
+        await data[const.SERVICE].stop()
         done = data.pop("task").done()
         _LOGGER.debug(f"async_unload_entry: task done: {done}")
 
